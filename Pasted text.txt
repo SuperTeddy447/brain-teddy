@@ -1,0 +1,394 @@
+ในฐานะที่คุณเป็น CTO คุณจะวางแผนและแข่ง hackathon ยังไง มี stack คือ java , node react js , podman , jmeter
+ถ้าผมเป็น CTO ของทีมนี้ ผมจะตั้งเป้าว่า ภายในวันแข่งต้องเดโมวงจรเบิกเงินสดได้ครบหนึ่งรายการ ตั้งแต่พนักงานสาขาเข้าสู่ระบบ → ขอเบิก → ศูนย์เงินสดเห็นรายการ → สาขายืนยันรับ → เปิดประวัติและตรวจสอบย้อนหลังได้ โดยมี API ครบ 3 รายการตามโจทย์ในภาพ
+
+โจทย์นี้มีระบบเดิมเป็น ASP Classic/VB6 และ DB2 ดังนั้นผมจะเสนอแนวทาง ย้ายทีละส่วน: สร้างระบบใหม่ที่ใช้งานได้จริงสำหรับสามฟังก์ชันก่อน พร้อมระบุจุดเชื่อมระบบเดิมให้ชัด ไม่อ้างว่าเปลี่ยน CDS ทั้งระบบได้ในหนึ่งวัน
+
+สิ่งที่จะสร้างในวันแข่ง
+ส่วน	ขอบเขตที่เดโม
+React	หน้าสาขาสำหรับขอเบิก ดูประวัติ และยืนยันรับเงิน; หน้าศูนย์เงินสดสำหรับติดตามสถานะ
+Java API	Cash Withdrawal Request, Cash Withdrawal History Inquiry, Cash Receipt Confirmation
+AAD / Microsoft Entra ID	เข้าสู่ระบบด้วยบัญชีองค์กร และตรวจสิทธิ์สาขาหรือศูนย์เงินสดที่ API
+ข้อมูล	ใช้ข้อมูลจำลองที่สมจริง หากไม่ได้รับสิทธิ์เข้าถึง DB2; แยกชั้นเชื่อมข้อมูลไว้สำหรับต่อระบบจริง
+Podman	คำสั่งเดียวสำหรับเปิดชุดเดโม
+JMeter	ทดสอบ API พร้อมแสดงผลเวลา response และข้อผิดพลาด
+ผมจะใช้ Java เป็น backend หลัก และ React เป็น frontend ส่วน Node ใช้กับเครื่องมือพัฒนา React ก่อน จะเพิ่ม Node service ก็ต่อเมื่อมีหน้าที่จำเป็นจริง ๆ เช่น BFF หรือ integration ที่ Java service ทำไม่เหมาะ การมี backend สองชุดในเวลาสั้นจะเพิ่มงานเชื่อมต่อและจุดเสียโดยไม่ช่วยเดโม
+
+การตัดสินใจทางเทคนิคที่สำคัญ
+ตกลง API contract ก่อนเขียนหน้าจอ: ระบุ request/response, สถานะรายการ, รหัสข้อผิดพลาด และตัวอย่างข้อมูลใน OpenAPI เพื่อให้ frontend กับ backend ทำงานพร้อมกันได้ 
+กำหนดสถานะให้ชัด เช่น REQUESTED → APPROVED → DISPATCHED → RECEIVED โดยสาม API ที่โจทย์บังคับต้องทำงานได้ แม้ขั้นอนุมัติและจัดส่งจะใช้ข้อมูลจำลองในเดโม
+กันการยืนยันรับซ้ำ: confirmation ต้องตรวจสถานะเดิมและรองรับ idempotency เพื่อไม่ให้การกดซ้ำหรือส่ง request ซ้ำสร้างผลลัพธ์สองครั้ง
+ตรวจสิทธิ์บน server: ผู้ใช้สาขาเห็นเฉพาะข้อมูลสาขาตนเอง; role ศูนย์เงินสดเห็นข้อมูลตามขอบเขตที่กำหนด ห้ามอาศัยการซ่อนปุ่มใน React เป็นการคุมสิทธิ์
+AAD ต้องเตรียมสิทธิ์ล่วงหน้า: สำหรับ React SPA ใช้ authorization code พร้อม PKCE และให้ API ตรวจ access token ที่ออกสำหรับ API นี้ 
+ หากวันแข่งยังไม่ได้ app registration หรือบัญชีทดสอบ ให้ระบุข้อจำกัดตรง ๆ และเตรียมโหมดเดโมที่แยกจากโหมดจริง
+ข้อมูลธนาคารในเดโม: ใช้ข้อมูลสังเคราะห์ทั้งหมด และมี audit log ว่าใครทำรายการใด เมื่อไร
+ตารางแข่งที่ผมจะคุม
+เวลา	ผลลัพธ์ที่ต้องมี
+10:00–11:00	อ่านเกณฑ์ตัดสิน ยืนยันขอบเขต AAD/DB2 ร่าง user flow และ API contract
+11:00–13:00	API ทั้งสามทำงานกับข้อมูลเดโม; React เปิดหน้าหลักและเรียก API ได้
+13:00–15:00	ต่อ flow สาขา → ศูนย์เงินสด → ยืนยันรับ พร้อมสิทธิ์และ validation
+15:00–16:30	ทดสอบกรณีสำคัญ: ไม่มีสิทธิ์, เกิน limit, ยืนยันซ้ำ, ไม่พบรายการ
+16:30–18:00	เปิดระบบด้วย Podman, รัน JMeter, บันทึกผล และซ้อมเดโม
+ก่อน 21:00	ส่ง source, วิธีรัน, OpenAPI, ผลทดสอบ และคลิปหรือสคริปต์เดโมตามกติกาจริง
+JMeter ควรรันโหลดเทสต์ผ่าน CLI แล้วรายงาน จำนวนผู้ใช้จำลอง, throughput, p95 response time และ error rate พร้อมระบุสภาพแวดล้อมที่ทดสอบ; ตัวเลขเป้าหมายต้องตั้งหลังทราบเกณฑ์แข่งขันและเครื่องที่ใช้ 
+
+จุดที่จะทำให้ผลงานชนะ คือเดโมที่ไหลลื่นและพิสูจน์ได้: เปิดรายการใหม่หนึ่งรายการ, แสดงว่าอีก role เห็นรายการนั้น, ยืนยันรับ, เปิด history, แล้วสาธิตว่าการยืนยันซ้ำถูกป้องกัน ปิดท้ายด้วย API specification, audit trail และผล JMeter ส่วน AI-assisted development ให้แสดงหลักฐานว่าใช้ช่วยทำ contract, tests หรือวิเคราะห์ข้อผิดพลาดอย่างไร โดยไม่ใส่ข้อมูลจริงของธนาคารลงในเครื่องมือ AI
+
+สิ่งที่ผมจะตรวจทันทีในช่วง briefing คือ เกณฑ์คะแนน, จำนวนสมาชิกทีม, สิทธิ์ AAD, สิทธิ์ DB2, ข้อกำหนดเรื่อง AI และรูปแบบไฟล์ที่ต้องส่ง เพราะหกข้อนี้อาจเปลี่ยนลำดับงานทั้งวันได้ครับ
+
+โจทย์มีให้ใช้ ghcp สามคนคนละ 50$ ควรใช้ model ไหนบ้าง ใช้ตอนไหน ควรลงสกิล ไหนบ้างเข่น ลง ux ui promax
+ถ้า GHCP หมายถึง GitHub Copilot และงบคือ คนละ $50 ผมจะไม่ให้ทั้งสามคนเปิดโมเดลแพงสุดตลอดวันครับ ผมจะให้แต่ละคนมีโมเดลประจำงาน แล้วสลับเป็นโมเดลแรงเฉพาะจุดที่ตัดสินคุณภาพของเดโม
+
+ตอนนี้ GitHub ระบุการคิดค่าใช้แบบ AI Credits ตาม input/output tokens สำหรับแผนปัจจุบัน แต่บางบัญชีแบบ annual เดิมยังใช้ premium request multiplier อยู่ ดังนั้นก่อนแข่งให้ทั้งสามคนเปิดหน้า Usage/Billing ของบัญชีตนเองและดูว่าโจทย์ให้วงเงิน $50 ในรูปแบบใด รวมทั้งดูรายชื่อโมเดลที่องค์กรอนุญาตจริง 
+
+ผมจะแบ่งสามคนแบบนี้
+คน	เจ้าของงาน	โมเดลหลัก	ใช้โมเดลแรงเมื่อ
+A: Backend/API	Java, 3 APIs, state, สิทธิ์, audit	GPT-6 Sol	ใช้ GPT-6 Astra ตรวจ design ของ authorization, idempotency และ edge cases หนึ่งรอบ
+B: Frontend/UX	React, flow สาขาและศูนย์เงินสด, demo UI	Claude Sonnet 5 หรือ GPT-6 Sol	ใช้โมเดลหลักทำหน้าจอทีละ flow; ใช้ ui-ux-pro-max ช่วยตรวจ form, ตาราง, สถานะและ accessibility
+C: Integration/QA	AAD, Podman, JMeter, OpenAPI, demo script	GPT-6 Sol; งานสรุปสั้นใช้ GPT-6 Luna	ใช้ Astra เฉพาะเมื่อ integration ติดปัญหาซับซ้อนและมี log ชัดเจน
+นี่เป็น การจัดงานที่ผมเสนอ ไม่ใช่อันดับ benchmark ของโมเดล GitHub แสดงราคา GPT-6 Luna ต่ำกว่า Sol มาก ขณะที่ Astra สูงกว่า Sol มาก จึงเหมาะจะใช้ Luna กับงานสั้น ๆ, Sol กับการลงมือเขียน, และ Astra กับการตรวจปัญหายากเป็นครั้งคราว 
+
+กติกาใช้งบ: ให้แต่ละคนกันงบประมาณ $10–15 จาก $50 ไว้สำหรับช่วง 2 ชั่วโมงสุดท้าย เพราะช่วงนั้นมักต้องแก้ build, auth และเดโมจริง ตั้งจุดตรวจ usage หลังช่วงเช้าและหลัง integration ครั้งแรก อย่าสั่ง agent ว่า “สร้างทั้งระบบ” ซ้ำหลายรอบ; ให้ส่ง task ที่มีไฟล์เป้าหมาย, acceptance criteria และคำสั่งทดสอบชัดเจน
+
+Skill ที่ควรเตรียม
+ผมจะเตรียมเพียง 1 skill ภายนอก + 3 skill ที่เขียนให้ตรงโจทย์:
+
+ui-ux-pro-max — ลงให้คน B: คุ้มสำหรับออกแบบ workflow ที่พนักงานต้องใช้เร็วและอ่านสถานะได้ชัด แต่กำชับว่าเป็น internal bank operations UI: เน้น form ที่ผิดพลาดยาก, ตารางอ่านง่าย, สถานะชัด, ปุ่มยืนยันที่แสดงยอด/สาขา/เลขอ้างอิงครบ ไม่ให้สร้าง dashboard สวย ๆ ที่กลบงานหลัก ตัวโครงการมีวิธีติดตั้งสำหรับ Copilot และเรียกผ่าน /ui-ux-pro-max 
+
+npx ui-ux-pro-max-cli init --ai copilot
+
+cds-api-contract — skill ของทีม: อธิบายสาม API, field ที่ตกลงร่วมกัน, status transitions, error responses และตัวอย่าง request/response ให้ A กับ B ใช้ contract เดียวกัน
+
+cds-security-review — skill ของทีม: checklist การตรวจ token, role/branch scope, limit, confirmation ซ้ำ และ audit log ให้ A กับ C ใช้ก่อนส่ง
+
+cds-demo-verification — skill ของทีม: ขั้นตอนเปิด Podman, seed ข้อมูล, รัน smoke test/JMeter, และลำดับคลิกเดโม ให้ C เป็นเจ้าของ
+
+ให้ใส่กติกาที่ใช้ ทุกงาน ไว้ใน .github/copilot-instructions.md เช่น “ยึด OpenAPI เป็นหลัก”, “ห้ามแก้ไฟล์ของอีกคนโดยไม่คุย”, “ทุก API ต้องตรวจสิทธิ์ฝั่ง server”, “ห้ามใช้ข้อมูลจริง”, และ “รันทดสอบก่อนรายงานว่าเสร็จ” ส่วนขั้นตอนเฉพาะทางค่อยใส่ใน .github/skills/<ชื่อ>/SKILL.md ตามแนวทางของ GitHub 
+
+สิ่งที่ผมจะทำก่อนลง ui-ux-pro-max: ให้คน B ตรวจไฟล์ skill และสคริปต์จาก repo ต้นทาง รวมทั้งยืนยันว่ากติกาองค์กรอนุญาต third-party skill ก่อนใช้กับ repo งานธนาคาร GitHub เองเตือนว่าการให้ skill รัน shell โดยอัตโนมัติควรทำหลังตรวจแหล่งที่มาแล้ว 
+
+ถ้าต้องเลือกให้ทันเวลาที่สุด: A และ C ใช้ GPT-6 Sol, B ใช้ Claude Sonnet 5 + ui-ux-pro-max, ทุกคนแชร์ contract เดียวกัน; Astra ใช้ตรวจความเสี่ยงหนึ่งรอบก่อนปิดงาน ครับ
+
+User attachment
+User attachment
+User attachment
+เพิ่มเติมครับ คือเราใช้สกิล 3rd party ได้เนอะยิ่งมาจาก github ยิ่งใช้ได้ผมอยากให้คุณช่วย pre skill pre promt หรือ pre สิ่งที่สำคัญก่อนแข่ง ประมาณหนึ่งชั่วโมงก่อนแข่ง คุณจัดอะไรต่างๆมาได้เลยนะ ผมจะไปลงและเตรียม ผมเพิ่มสกิลนี้ไม่แน่ใจจำเป็น ไหม วิดีโอนี้สรุปขั้นตอนการออกแบบระบบ (System Design) ตั้งแต่ระดับเริ่มต้นไปจนถึงระดับที่รองรับผู้ใช้งานจำนวนมาก โดยใช้แนวคิด 'เพิ่มเมื่อจำเป็น' เพื่อแก้ปัญหาคอขวดทีละจุดครับ
+
+สรุปสาระสำคัญ:
+เริ่มต้น (1:40): เริ่มจาก 1 Server + 1 Database ซึ่งเพียงพอสำหรับผู้ใช้งานจำนวนหลายพันคน
+Horizontal Scaling (4:44): เมื่อ Server รับไม่ไหว ให้เพิ่มจำนวน Server และใช้ Load Balancer (6:25) เพื่อกระจายงาน
+Stateless Architecture (10:56): เปลี่ยนให้ Server เป็น Stateless (ไม่เก็บ Session ไว้ในเครื่องตัวเอง) โดยย้ายไปเก็บไว้ที่ Redis แทน เพื่อให้ทุก Server ทำงานแทนกันได้
+Database Scaling (14:35): ใช้ Connection Pooling เพื่อลดภาระการเชื่อมต่อ และใช้ Read Replicas (17:25) เพื่อแยกงานอ่าน-เขียน
+Caching (21:35): ใช้ Redis ทำ Caching เพื่อลดการ Query ข้อมูลที่ซ้ำเดิมจาก Database
+Queues (27:28): นำงานหนัก/ช้า ไปไว้ในคิว (Queue) แล้วให้ Worker จัดการเบื้องหลัง เพื่อให้ User ไม่ต้องรอนาน
+Sharding (30:03): เมื่อข้อมูลใหญ่จนเก็บใน Database เดียวไม่พอ ให้แบ่งข้อมูลกระจายไปหลายๆ ก้อน (Shard)
+การนำไปใช้ในงาน Hackathon:
+ในการแข่ง Hackathon คุณไม่ต้องทำทุกอย่าง แต่ควรนำไปปรับใช้เพื่อโชว์ความเข้าใจในระบบที่รองรับการขยายตัว (Scalability):
+
+เลือกใช้ Managed Service: ในเวลาจำกัด อย่าเสียเวลาตั้งค่าเอง ให้ใช้บริการอย่าง Supabase (มี Database + Auth), Vercel/Railway (มี Load Balancer ในตัว), หรือ Upstash Redis เพื่อประหยัดเวลา
+
+เน้น Performance ตั้งแต่ต้น: แม้จะเป็นโปรเจกต์สั้นๆ แต่การวาง Caching ในจุดที่ต้องดึงข้อมูลซ้ำๆ จะทำให้ App ดูลื่นไหลและดู Professional ในสายตากรรมการ
+
+ออกแบบ Async Job: ถ้ามีฟีเจอร์อย่างการส่ง Email หรือประมวลผลรูปภาพ ให้ทำเป็น Background Job (Queue) แล้วบอกกรรมการว่า "ส่วนนี้ออกแบบมาเพื่อรองรับ Traffic มหาศาลในอนาคต" จะช่วยเพิ่มคะแนนด้าน System Design ได้มากครับ
+
+เตรียมตอบคำถาม Trade-off: กรรมการมักถามว่าทำไมใช้ตัวนี้? ให้ตอบตามหลักการในวิดีโอ เช่น "เราเลือกทำ Read Replicas เพราะ App เน้นการอ่านมากกว่าเขียน" การอธิบายเหตุผลของการเลือกระบบได้ดี จะทำให้ทีมของคุณโดดเด่นกว่าทีมที่แค่เขียน Code ให้ทำงานได้ครับ วิเคราะห์โจทย์ CDS Modernization Challenge
+
+จากภาพที่ชื่อให้มา นี่คือโครงสร้างของการแข่งขัน SCB Technology AI Hackathon 2026 สำหรับการปรับปรุง CDS (Cash Delivery System) มาให้ทันสมัย:
+🎯 ปัญหาที่ต้องแก้ไข (Image 1)
+1. Modernize CDS System
+ระบบปัจจุบันใช้เทคโนโลยีเก่า (On-premise, VB6, Crystal Reports, DB2 v11)
+ต้องปรับปรุงเพื่อให้เข้ากับยุคปัจจุบัน
+2. Authentication ผ่าน AAD
+ย้ายจากระบบเดิมไป Azure Active Directory
+3. สร้าง 3 APIs มาตรฐาน
+Cash Withdrawal Request API - เบิกเงินสด
+Cash Withdrawal History Inquiry API - ตรวจสอบประวัติการเบิก
+Cash Receipt Confirmation API - ยืนยันใบเสร็จ
+📊 ขอบเขตการดำเนินการ (Image 2)
+มิติรายละเอียด	
+สาขา	612 สาขาทั่วประเทศ
+ผู้ใช้งาน	1,980 คน
+ทีม	1-6 คน/ทีม, 19 ทีมทั้งหมด
+ระบบที่เกี่ยวข้อง	IAM/AD, SMTP, Reporting, Audit & SOC, GL System
+⚙️ สิ่งที่ต้องประมวลผล
+Main Functions:
+Branch (สาขา): 
+เบิกเงินสด
+ยืนยันรับเงินบิก
+ส่งเงินสด
+ข้อมูลการเบิกส่งเงินสดย้อนหลัง
+Center (สำนักงานใหญ่): 
+กำหนด limit/วงเงิน
+อนุมติรายงานส่ง GL
+ปฏิทิน/ประกาศสำคัญ
+ส่ง email ให้ vendor
+📅 ขั้นตอนการแข่งขัน Day 1 (Image 3)
+เวลากิจกรรม	
+08:30-09:00	ลงทะเบียน & Check-in
+09:00-09:15	Opening Remarks
+09:15-09:45	ประกาศโจทย์
+09:45-10:00	Rules & Q&A
+10:00-12:00	AI Engineering Sprint (Part 1) ⭐
+12:00-13:00	พักอาหารกลางวัน
+13:00-16:00	AI Engineering Sprint (Part 2) ⭐
+16:00-17:30	Team Collaboration & Preparation
+17:30-18:00	Final Submission Preparation
+หลัง 18:00	Demo & Presentation
+🚀 ที่ต้องส่ง (Submission)
+Git Repository
+
+Architecture Diagram
+
+Technical Documentation
+
+AI Usage Summary
+
+Demo/Presentation ตัวชี้วัดและเกณฑ์การตัดสิน
+
+📊 การแบ่งคะแนน (100%)
+🎯 ความเข้าใจเชิงลึกของแต่ละหมวด
+1️⃣ AI Engineering Approach (30%) ⭐ MOST IMPORTANT
+ทำไมเป็นหมวดเด็ด? → นี่คือ AI Hackathon ไม่ใช่ general hackathon
+
+ด้านต้องทำอะไร	
+GitHub Copilot Usage	✏️ ใช้ Copilot มาช่วยเขียนโค้ด (เอกสารการใช้)
+Prompt Design	🎯 ออกแบบ prompt ให้อัจฉริยะ (ดีพอ AI เข้าใจ)
+AI Workflow	🔄 บ่งชี้ว่า AI ช่วยในส่วนไหน (architecture design, testing, API design)
+💡 Strategy:	
+เขียน prompt ที่ดี → ได้โค้ด quality สูง
+บันทึก prompt ที่ประสบความสำเร็จ
+อธิบายว่า Copilot ช่วยแก้ปัญหาอะไร
+2️⃣ Engineering Excellence (30%)
+เกณฑ์อยากเห็นอะไร	
+Architecture Design	🏗️ 3 APIs ต้อง well-structured, scalable, maintainable
+Design Patterns	🔧 Factory, Dependency Injection, Repository Pattern
+SOLID Principles	📐 Single Responsibility, Open/Closed, Interface Segregation...
+Maintainability	🧹 Code ต้องให้เข้าใจได้ง่าย, ไม่มี spaghetti code
+Clean Code	📝 ชื่อ variable/function ชัดเจน, comment เหมาะสม
+❌ หลีกเลี่ยง:	
+✅ ควรมี:
+
+3️⃣ Testing & Reliability (15%)
+หมวดเกณฑ์	
+Unit Testing	🧪 Test coverage ≥70% (critical paths ต้อง 100%)
+Error Handling	⚠️ Try-catch, validation, graceful failure
+Edge Cases	🔍 Empty data, null values, timeout, network errors
+ตัวอย่างที่ดี:	
+csharp
+
+4️⃣ Code Quality & Review (15%)
+มิติหมายถึง	
+Readability	📖 คนอื่นเข้าใจโค้ดได้ 5 นาที (ไม่ต้องถาม)
+Refactoring	🔄 ลดการทำซ้ำ (DRY), แยกฟังก์ชันเล็ก ๆ
+Technical Debt Reduction	🏗️ ไม่มีหนี้เทคนิค (ส่ง cleanup commit ด้วย)
+5️⃣ Presentation & Technical Defense (10%)
+ส่วนคะแนน	
+Technical Explanation	🎤 อธิบาย architecture ได้ชัด (ทีมหรือคนเดียว)
+Demo Effectiveness	🎬 3 APIs ทำงานจริง (ไม่ได้ slides ธรรมชาติ)
+Q&A	❓ ตอบคำถากรรมการได้เฉพาะเจาะจง (ไม่ "หลบหลีก")
+🎯 Demo Checklist:	
+ Show API documentation (Swagger/OpenAPI)
+ POST: Withdrawal Request (ทดสอบ success + error case)
+ GET: Withdrawal History (filter, pagination)
+ POST: Receipt Confirmation
+ Show logs (audit trail)
+ Show error handling (try wrong params)
+📦 Deliverables ที่ต้องส่ง (6 อย่าง)
+✅ 1. Git Repository
+⭐ สำคัญ:
+
+Clean commit history (ชื่อ commit ชัดเจน)
+มี .gitignore ที่ดี
+ไม่มี secrets/passwords
+Documentation up-to-date
+✅ 2. Architecture Diagram
+📐 Tools:
+
+Draw.io / Lucidchart / Miro
+PlantUML
+Excalidraw
+✅ 3. Technical Documentation
+ต้องมี 4 ส่วนหลัก:
+
+3.1 System Design
+markdown
+
+3.2 API Specification
+markdown
+
+3.3 Deployment Guide
+markdown
+
+3.4 Testing Strategy
+markdown
+
+✅ 4. AI Usage Summary
+รูปแบบที่ดี:
+
+markdown
+
+✅ 5. Presentation Deck
+Slides Structure (10-15 slides):
+
+Title Slide - Team name, problem statement
+Problem & Context - Current CDS pain points
+Solution Overview - 3 APIs approach
+Architecture Diagram - System design
+Technology Stack - Why these choices?
+API 1: Cash Withdrawal Request 
+Flow diagram
+Key features
+API 2: History Inquiry
+API 3: Receipt Confirmation
+AI Engineering Approach 
+How Copilot accelerated development
+Code generation examples
+Testing Strategy - Coverage metrics
+Deployment & Scalability
+Demo Overview - What we'll show
+Key Achievements
+Q&A
+✅ 6. Working Demo
+Demo Scenario (ควรใช้เวลา 5-7 นาที):
+
+Demo Environment Options:
+
+🐳 Docker container (easiest)
+☁️ Azure / AWS (cloud)
+💻 Laptop local (have backup)
+Fallback: Screen recording MP4 (if live demo fails)
+🎯 Winning Strategy Checklist
+ลำดับที่ต้องทำความสำคัญ		
+1	3 APIs ทำงานจริง 100%	🔴 Critical
+2	AI/Copilot evidence ชัดเจน	🔴 Critical (30%)
+3	Clean architecture & SOLID	🟡 High (30%)
+4	Comprehensive tests	🟡 High (15%)
+5	Smooth demo + Q&A	🟡 High (25%)
+6	Good documentation	🟢 Medium
+💡 Pro Tips
+✅ Do's:
+
+ทำให้ code readable (ตั้งชื่อ variable ที่สื่อความ)
+ส่ง prompt examples ที่ Copilot ช่วยได้จริง
+Test ก่อนวันแข่ง (debug live ไม่ดี)
+Practice Q&A ตอบชัดเจน
+ใช้ git commit history บ่งบอกเรื่องราว
+❌ Don'ts:
+❌ Copy-paste code จาก stackoverflow
+❌ ลืม error handling
+❌ Hardcode config / database connection
+❌ Demo ที่ยังไม่ test
+❌ Slide เยอะแต่ไม่อธิบายเข้าใจ
+…
+จัดชุดเตรียมให้แล้วครับ Teddy:
+
+CDS_PREP_60_MIN.md
+
+ไฟล์เดียวรวม template 15 ไฟล์ พร้อม prompt ให้ GitHub Copilot แยกไปสร้างใน repository ของทีม
+
+เรื่อง third-party skill
+Copilot รองรับ third-party skills ครับ แต่การอยู่บน GitHub ไม่ได้หมายความว่าผ่านกติกาแข่งขันโดยอัตโนมัติ ภาพระบุเพียง “ใช้ GitHub Copilot เท่านั้น” จึงควรยืนยันเรื่อง skills และเอกสารเตรียมล่วงหน้า ในช่วง Q&A หนึ่งครั้ง ส่วนทางเทคนิคใช้ .github/skills/<ชื่อ>/SKILL.md ได้ 
+
+ผมเตรียมอะไรให้บ้าง
+สิ่งที่เตรียม	ใช้ทำอะไร
+แผนเตรียม 60 นาที	ตรวจเครื่องมือ บัญชี สิทธิ์ และแบ่งงาน
+Copilot instructions กลาง	ให้สามคนใช้ contract และกติกาเดียวกัน
+cds-contract	API, เงิน, สิทธิ์สาขา, รายการซ้ำ, concurrency
+cds-ui-review	React form/table, ภาษาไทย, loading/error และ confirmation
+cds-verification	Tests, JMeter, review และหลักฐานผลทดสอบ
+cds-architecture-defense	เลือก architecture และเตรียมตอบกรรมการ
+Prompt สำหรับ A/B/C	Backend / Frontend / Integration
+AI usage log และ test matrix	บันทึกงานที่ทำจริงและสิ่งที่คนแก้จาก AI
+Submission checklist	ตรวจความพร้อมก่อนส่ง 18:00
+ตรวจโครงสร้าง template และ frontmatter แล้ว ยังไม่ได้ทดสอบกับ Copilot, AAD หรือ DB2 ของทีมครับ
+
+UI UX Pro Max ควรลงไหม?
+ลงให้คนทำ frontend ได้ แต่จำกัดเวลา setup ประมาณ 10 นาที ใช้ช่วยออกแบบฟอร์ม ตาราง และสถานะให้สม่ำเสมอ
+
+README ของโครงการระบุว่า Copilot ใช้แบบ workflow/slash command จึงต้องตรวจหลังติดตั้งว่า /ui-ux-pro-max หรือไฟล์ prompt ที่สร้างใช้งานได้จริง ไม่ควรถือว่าติดตั้งแล้วจะถูกเรียกอัตโนมัติทุกครั้ง วิธีติดตั้งและตรวจอยู่ในไฟล์แล้วครับ 
+
+ถ้าติดตั้งติดขัด ใช้ cds-ui-review ที่เตรียมไว้เริ่มทำงานได้ทันที
+
+Skill เรื่อง System Design จำเป็นแค่ไหน?
+แนวคิด “เพิ่มเมื่อจำเป็น” เหมาะกับโจทย์นี้มาก ผมนำมาใส่ใน cds-architecture-defense แล้ว โดยเสนอให้เริ่มแบบนี้:
+
+React + Java backend หนึ่งชุดที่แบ่งโมดูลชัดเจน + Database ที่ผู้จัดกำหนด + Podman
+
+ทำ pagination, query/index, connection pool และความถูกต้องของ transaction ก่อน แล้วใช้ผล JMeter เป็นเหตุผลในการเพิ่มส่วนอื่น
+
+จุดที่ควรแก้จากบทสรุปที่ส่งมา:
+
+3 APIs ไม่ได้แปลว่าต้องมี 3 microservices
+Stateless ไม่ได้บังคับว่าต้องใช้ Redis
+1,980 ผู้ใช้ ไม่เท่ากับ 1,980 concurrent users
+Cache วงเงินหรือสถานะอาจทำให้ตัดสินใจจากข้อมูลเก่า ต้องออกแบบความสดของข้อมูลก่อน
+Read replica, queue และ sharding เป็นทางเลือกที่ต้องมีเหตุผลและหลักฐาน
+Coverage, “เร็วขึ้น 40%” หรือ “ประหยัดสองชั่วโมง” ต้องวัดหรือระบุว่าเป็นประมาณการ ไม่ใช้ตัวเลขตัวอย่างเป็นผลงานจริง
+เริ่มใช้อย่างไร
+ดาวน์โหลดไฟล์ เปิดพร้อม repository บนเครื่องบริษัท
+แนบไฟล์ใน GitHub Copilot Agent mode
+ใช้ prompt SETUP ที่ต้นไฟล์ เพื่อสร้าง templates
+ตรวจ diff แล้วแบ่ง prompt ให้ A/B/C ตามหน้าที่
+ลำดับที่ผมให้ความสำคัญในหนึ่งชั่วโมงนี้คือ AAD/DB access → เครื่องมือรันได้ → API contract → แบ่งเจ้าของไฟล์ → skills/UI เพราะสิทธิ์และ integration ที่ติดขัดจะกระทบเวลาทั้งทีมมากที่สุดครับ
+
+คุณทำ read me  ทำแยกสกิล และทำ step ทำ table timing และสกิลที่จำเป็นใช้ช่วงเวลาไหนจำลอง และใส่เข้าไปใน https://github.com/SuperTeddy447/brain-teddy.git  public ของผมได้ปะ
+
+ผมทำชุดไฟล์สำหรับ brain-teddy เสร็จแล้วครับ: README, 4 Copilot skills แยกไฟล์, prompts ตามบทบาท, และ runbook ที่ระบุขั้นตอน เวลา และ skill ที่ใช้ในแต่ละช่วง รวม 18 ไฟล์ ตรวจโครงสร้าง skill กับลิงก์ภายในแล้ว
+
+ดาวน์โหลดชุดไฟล์ทั้งหมด
+อ่าน README
+ดูตารางเวลาและขั้นตอน
+ยังไม่ได้ขึ้น brain-teddy ครับ การเขียนไฟล์ครั้งแรกถูก GitHub ตอบ 403 Resource not accessible by integration; ตรวจต่อแล้วพบว่า GitHub App ในแชตนี้ยังไม่มี repository installation จึงไม่มีสิทธิ์เขียนผ่านการเชื่อมต่อนี้
+
+ให้เปิดการเชื่อมต่อ GitHub ใน ChatGPT และอนุญาต repo SuperTeddy447/brain-teddy แล้วบอกผมว่า “เชื่อมแล้ว” ผมจะนำไฟล์ชุดที่เตรียมไว้ขึ้น repo และตรวจผลบน GitHub ให้ต่อครับ
+
+
+README.md
+Document
+
+runbook.md
+Document
+เอ๋ผมต่อไปแล้วนะครับ  โฟลเดอร์โปรเจกต์ถูกสร้างไว้ที่: 
+/Users/teddywoot/.gemini/antigravity-ide/scratch/brain-teddy****  ลอง push อีกรอบได้มั้ย 
+
+ลอง push อีกครั้งแล้วครับ แต่ยังถูก GitHub ปฏิเสธด้วย 403 Resource not accessible by integration และตรวจพบว่า GitHub App ในแชตนี้ยังไม่มี installation ที่เข้าถึง repo ได้ จึงยังไม่มีไฟล์ขึ้น GitHub ครับ
+
+path /Users/teddywoot/.gemini/antigravity-ide/scratch/brain-teddy อยู่บนเครื่อง Mac ของคุณ ผมเปิด path นั้นจาก workspace นี้ไม่ได้ การเชื่อม GitHub ใน Antigravity IDE จึงไม่ทำให้ผมเข้าถึงไฟล์ในเครื่องนั้นโดยตรง
+
+ชุดไฟล์ที่เตรียมไว้ยังดาวน์โหลดได้ที่ 
+brain-teddy-prep.tar.gz
+ หากต้องการให้ผม push ผ่าน GitHub ให้เชื่อม GitHub App ใน ChatGPT → Settings → Apps/Connectors และอนุญาต repo SuperTeddy447/brain-teddy ด้วยครับ
+
+ไม่เป็นไรเดี๋ยว push เองนำไฟล์ไปวางบน 
+/Users/teddywoot/Documents/brain-teddy**** ได้มั้ยครับรอบนี้ 
+
+Worked for 9s
+ผมเขียนไฟล์ลง /Users/teddywoot/Documents/brain-teddy โดยตรงไม่ได้ครับ เพราะ path นั้นอยู่บน Mac ของคุณ ซึ่งแชตนี้เข้าถึงไม่ได้
+
+ดาวน์โหลด 
+brain-teddy-prep.tar.gz
+ แล้วแตกไฟล์ลงโฟลเดอร์ปลายทางด้วย Terminal บน Mac:
+
+mkdir -p /Users/teddywoot/Documents/brain-teddy
+tar -xzf ~/Downloads/brain-teddy-prep.tar.gz -C /Users/teddywoot/Documents/brain-teddy
+
+ถ้าไฟล์ดาวน์โหลดไปอยู่โฟลเดอร์อื่น ให้เปลี่ยน ~/Downloads/brain-teddy-prep.tar.gz เป็นตำแหน่งจริงของไฟล์ครับ
+
+เพราะเป็น cloud ใช่ไหมเนี่ย ย้ายให้ผมได้ไหมทำบน local แทนได้ไหมสลับยังไง
+ใช่ครับ ตอนนี้คุยผ่านแอป ChatGPT บน iPhone งานจึงรันในคลาวด์ และผมเข้าถึง path บน Mac โดยตรงไม่ได้ ใน iOS ไม่มีปุ่มเปลี่ยนแชตนี้ให้ไปรัน local ครับ
+
+ถ้าต้องการให้ agent เปิดโฟลเดอร์บน Mac มีสองทาง:
+
+ChatGPT Desktop → Work: เปิดแชตนี้บน Mac แล้วเปิดโฟลเดอร์ ~/Documents/brain-teddy และอนุญาตให้แอปเข้าถึงไฟล์ได้ แชต Work จากมือถือซิงก์มา desktop ได้ แต่การทำงานกับไฟล์ local ขึ้นกับสิทธิ์ของแอปและ workspace ด้วย เนื้อหาแชตอาจยังถูกเก็บในคลาวด์
+
+ChatGPT Desktop → Codex: เลือก Codex จากเมนูมุมซ้ายบน แล้วเปิดโฟลเดอร์ local เพื่อทำงานกับ repository ได้ ประวัติ Codex แยกจากประวัติ Work และ Codex ใช้จากมือถือโดยตรงไม่ได้
+
+สำหรับย้ายไฟล์ชุดที่เตรียมไว้ วิธีตรงที่สุดคือเปิดแชตนี้บน Mac ดาวน์โหลด 
+brain-teddy-prep.tar.gz
+ แล้วแตกลงโฟลเดอร์ด้วย Terminal:
+
+mkdir -p ~/Documents/brain-teddy
+tar -xzf ~/Downloads/brain-teddy-prep.tar.gz -C ~/Documents/brain-teddy
+
+ถ้า Mac ไม่มีปุ่มเปิดโฟลเดอร์ local ใน Work ให้ใช้ Codex Desktop หรือแตกไฟล์ด้วยคำสั่งด้านบนได้เลยครับ
+
+
