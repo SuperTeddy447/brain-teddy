@@ -7,7 +7,7 @@
 1. เปิด repo นี้บน **เครื่องและ IDE ที่ผู้จัดอนุญาต** แล้วอ่าน [โจทย์และรายการที่ต้องยืนยัน](docs/brief.md)
 2. เปิด [cookbook รายเวลา](docs/cookbook.md): เตรียม 60 นาที, แข่งตั้งแต่ 08:30 จนส่งก่อน 18:00, และ demo หลังส่ง
 3. ให้ทั้งสามคนเปิด [คู่มือ GitHub Copilot](docs/copilot-setup.md) เพื่อตรวจ custom instructions, skills, agents และ prompt files ใน IDE จริง
-4. C ยืนยัน API contract ก่อน A/B ลงมือพร้อมกัน; บันทึกคำตอบผู้จัดใน [decisions](docs/decisions.md)
+4. C ยืนยัน [ข้อกำหนด P0/P1](docs/requirements.md) และ API contract ก่อน A/B ลงมือพร้อมกัน; บันทึกคำตอบผู้จัดใน [decisions](docs/decisions.md)
 5. เมื่อทำงานจริง บันทึกหลักฐานใน [test matrix](docs/test-matrix.md), [performance](docs/performance.md) และ [AI usage](docs/ai-usage.md)
 
 > กำหนดการที่ได้รับระบุส่งผ่าน SharePoint **ก่อน 18:00 น. เวลาไทย วันที่ 25 กันยายน 2026** ตั้งเป้าอัปโหลดเสร็จ 17:50 น. ยืนยันเวลาและรูปแบบไฟล์กับผู้จัดในวันแข่ง
@@ -26,7 +26,7 @@
 | B — Frontend | `frontend/` | `cds-frontend` | `cds-ui-review` | `/cds-frontend-slice` |
 | C — Lead/Integration | `contracts/`, `infra/`, `tests/`, shared `docs/` | `cds-integration` | `cds-contract`, `cds-verification`, `cds-architecture-defense` | `/cds-kickoff` |
 
-Agent = บทบาทและขอบเขตงาน; skill = วิธีทำงานเฉพาะเรื่อง; prompt = งานหนึ่งช่วงเวลา. ตารางเรียกใช้เต็มวันและเกณฑ์ผ่านอยู่ใน [cookbook](docs/cookbook.md). รายละเอียดเปิดใช้และทดสอบ Copilot อยู่ใน [copilot-setup](docs/copilot-setup.md). ถ้า IDE ไม่แสดง custom agent หรือ slash prompt ให้เปิดไฟล์ prompt ตามลิงก์แล้ววางข้อความใน Copilot Agent mode พร้อมระบุ skill ที่ต้องการ
+Agent = บทบาทและขอบเขตงาน; skill = วิธีทำงานเฉพาะเรื่อง; prompt = งานหนึ่งช่วงเวลา. C ใช้ `cds-legacy-modernization` เพิ่มในช่วง briefing/defense. ตารางเรียกใช้เต็มวันและเกณฑ์ผ่านอยู่ใน [cookbook](docs/cookbook.md). รายละเอียดเปิดใช้และทดสอบ Copilot อยู่ใน [copilot-setup](docs/copilot-setup.md). ถ้า IDE ไม่แสดง custom agent หรือ slash prompt ให้เปิดไฟล์ prompt ตามลิงก์แล้ววางข้อความใน Copilot Agent mode พร้อมระบุ skill ที่ต้องการ
 
 ## Milestones
 
@@ -42,6 +42,8 @@ Agent = บทบาทและขอบเขตงาน; skill = วิธ�
 ## เอกสารในชุดนี้
 
 - [Cookbook รายเวลาและ prompt mapping](docs/cookbook.md)
+- [ข้อกำหนด P0/P1/P2 และเกณฑ์ผ่าน](docs/requirements.md)
+- [คู่มือเข้าใจ flow](docs/field-guide.md), [แผนยกระดับระบบเดิม](docs/legacy-modernization.md), [แผนเก็บคะแนนด้วยหลักฐาน](docs/judging-playbook.md)
 - [วิธีใช้ GitHub Copilot agents, skills, prompts และ UI UX Pro Max](docs/copilot-setup.md)
 - [Brief](docs/brief.md), [Decisions](docs/decisions.md), [Runbook เดิม](docs/runbook.md)
 - [Test matrix](docs/test-matrix.md), [Performance](docs/performance.md), [AI usage](docs/ai-usage.md), [Submission checklist](docs/submission-checklist.md)

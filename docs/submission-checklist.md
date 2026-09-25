@@ -8,11 +8,14 @@
 - [ ] Secrets excluded; no real token/test credentials in repo, screenshots or JMeter results.
 - [ ] Architecture diagram matches implementation; planned/mocked integrations are labeled.
 - [ ] OpenAPI and technical documentation match implementation.
+- [ ] P0 requirements in `docs/requirements.md` have evidence or explicit Blocked/Not run status; P1 claims only what ran.
+- [ ] Legacy-to-new map labels each integration implemented, fixture/fallback, blocked or future; data ownership is explained.
 - [ ] Test matrix, measured coverage when required, load results and limitations attached.
 - [ ] AI usage summary includes prompts, human corrections and real evidence.
 - [ ] Preparation and third-party licenses/sources are attributed as required.
 - [ ] A teammate has run the documented clean-start path.
 - [ ] Demo script has deterministic fixtures and shows success plus a rejected operation.
+- [ ] Team can explain why a newly requested withdrawal may not be eligible for receipt yet; seeded eligible data is identified clearly.
 - [ ] Backup recording uses synthetic data and excludes credentials.
 - [ ] Reviewed source revision recorded; no unreviewed changes added after rehearsal.
 - [ ] Repository access and submitted links/files checked from the actual submission.

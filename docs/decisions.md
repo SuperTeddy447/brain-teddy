@@ -12,6 +12,10 @@
 | D08 | Topology | Propose one modular Java backend | C | TBD | Proposed |
 | D09 | Third-party prep | Permission and dependency policy | C | TBD | Pending |
 | D10 | Versions | Approved JDK/Node/framework/DB/images | All | TBD | Pending |
+| D11 | Legacy ownership | Old/new transaction source of truth, DB2 write permission and coexistence owner | C/A | TBD | Pending |
+| D12 | Center view | May Center query History via role/scope, or is a separate required flow? | C/B | TBD | Pending |
+| D13 | Scoring | Official weights, mandatory coverage/performance and presentation time | C | TBD | Pending |
+| D14 | Receipt demo path | Real state transition path or approved seeded eligible fixture | C/A | TBD | Pending |
 
 ## API change log
 Record contract version, change, reason, A/B acknowledgement and compatibility impact.

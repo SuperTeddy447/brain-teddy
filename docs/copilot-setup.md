@@ -16,10 +16,12 @@
 ## เช็กให้ใช้งานได้ใน 5 นาที
 
 1. เปิด **root ของ repo นี้** ใน VS Code ที่ลงชื่อเข้าใช้ Copilot ของบริษัท แล้วเปิด Copilot Chat → Agent mode
-2. ถาม `Summarize the repository instructions and list the CDS skills you can access. Do not edit files.` ตรวจว่าคำตอบอ้าง `.github/copilot-instructions.md` และพบ 4 skills. ถ้าไม่พบ ให้เปิดไฟล์ที่เกี่ยวข้องใน editor แล้วสั่งอ่าน path โดยตรง
+2. ถาม `Summarize the repository instructions and list the CDS skills you can access. Do not edit files.` ตรวจว่าคำตอบอ้าง `.github/copilot-instructions.md` และพบ 5 skills. ถ้าไม่พบ ให้เปิดไฟล์ที่เกี่ยวข้องใน editor แล้วสั่งอ่าน path โดยตรง
 3. ดูตัวเลือก custom agent ว่ามี `cds-backend`, `cds-frontend`, `cds-integration`. ถ้าไม่มี ให้ใช้ Agent mode ปกติและวางเนื้อหา agent profile ตามบทบาทก่อน prompt งาน
 4. พิมพ์ `/` แล้วตรวจว่ามี prompt เช่น `/cds-kickoff`. ถ้า IDE ไม่รองรับ prompt files ให้เปิด `.github/prompts/cds-kickoff.prompt.md` แล้ววางเนื้อหาใน chat
 5. ให้ C ทดสอบแบบอ่านอย่างเดียวด้วยข้อความ `Read docs/brief.md and docs/decisions.md. List the five blocking unknowns with owners. Do not edit files.` ตรวจว่า Copilot ไม่แต่งข้อมูล AAD/DB2 แล้วค่อยใช้ `/cds-kickoff` เมื่อถึง contract gate
+
+Skill ที่เพิ่ม: `cds-legacy-modernization` ใช้โดย C ตอนฟังข้อมูลระบบเดิมและช่วง 16:00–16:15 เพื่ออัปเดต migration map. Prompt `/cds-modernization` ทำเอกสารนี้; `/cds-explain-flow` ใช้ถามเรื่อง flow เป็นภาษาไทยแบบอ่านอย่างเดียว. อ่าน [requirements](requirements.md) และ [field guide](field-guide.md) ประกอบ
 
 GitHub ระบุว่า project skills อยู่ใน `.github/skills`, custom agents ใน `.github/agents`, และ prompt files ใน `.github/prompts`. Prompt files ยังมีข้อจำกัดตาม IDE. ดู [skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills), [custom agents](https://docs.github.com/en/copilot/reference/custom-agents-configuration), [prompt files](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide)
 
