@@ -6,7 +6,7 @@
 
 **SA พูดกับทีม:** “วันนี้เราทำสาม API ให้ถูกและเดโมได้ก่อน. BE ดู Java/ข้อมูล, FE ดู React, ผมดู contract/integration/ส่งงาน. ทุกคนเปิด README กับ repo เดียวกัน”
 
-1. ทั้งสามคนเปิด [คู่มือ Copilot](copilot-setup.md) และตรวจว่า agent, 5 skills, slash prompts ใช้ได้ใน IDE บริษัท
+1. ทั้งสามคนเปิด [คู่มือ Copilot](copilot-setup.md) และตรวจว่า agent, 6 skills, prompt picker ใช้ได้ใน IDE บริษัท
 2. BE เช็ก Java/build/DB access; FE เช็ก Node/React/browser; SA เช็ก Git/Podman/JMeter, Entra owner และช่องทาง SharePoint
 3. SA เขียน blocker ที่พบลง [decisions](decisions.md) พร้อมชื่อคนรับผิดชอบ; อ่าน [ตารางเตรียม 60 นาที](cookbook.md)
 
@@ -60,13 +60,13 @@ BE ใช้ `/cds-receipt-hardening` ทำ receipt transaction, สิทธ�
 
 ## ฉาก 6 — 14:30–16:00: พิสูจน์งาน
 
-SA ใช้ `/cds-verify` เก็บ smoke/JMeter และข้อมูลเครื่อง/ภาระงานใน [performance](performance.md). BE รัน tests เรื่องเงิน, สิทธิ์, state, concurrent receipt และ rollback ตามที่ทำได้. FE ทดสอบ loading, error, session หมดอายุ, keyboard และจอแคบ. ทุกคนส่งหลักฐาน Copilot จริงให้ SA ลง [AI usage](ai-usage.md): prompt → ข้อเสนอ → สิ่งที่คนแก้ → ผลทดสอบ
+SA+BE ใช้ `cds-security-review` 30 นาทีแรก ตรวจ [OWASP map ของ CDS](security-defense.md): token, ข้ามสาขา, role, field ที่ server เป็นเจ้าของ และกดรับซ้ำ. ต่อจากนั้น SA ใช้ `/cds-verify` เก็บ smoke/JMeter และข้อมูลเครื่อง/ภาระงานใน [performance](performance.md). BE รัน tests เรื่องเงิน, state, concurrent receipt และ rollback ตามที่ทำได้. FE ทดสอบ loading, error, session หมดอายุ, keyboard และจอแคบ. ทุกคนส่งหลักฐาน Copilot จริงให้ SA ลง [AI usage](ai-usage.md): prompt → ข้อเสนอ → สิ่งที่คนแก้ → ผลทดสอบ
 
 **ฉากจบเมื่อ:** สาม API มีผลทดสอบที่อ้างได้, รู้กรณีที่ยังไม่ผ่าน, ไม่ใส่ตัวเลขประสิทธิภาพที่ยังไม่ได้วัด
 
 ## ฉาก 7 — 16:00–17:00: ซ้อมนำเสนอและตอบกรรมการ
 
-SA ใช้ `/cds-modernization` ไม่เกิน 15 นาที ปรับ [แผนระบบเดิมไปใหม่](legacy-modernization.md) ให้ตรงของที่ทำ. จากนั้นใช้ `/cds-rehearse`; ให้ FE เป็นคนคลิกเดโม, BE อธิบายเงิน/transaction, SA เปิดเรื่องและตอบ architecture/AI evidence. ให้คนที่ไม่ได้ตั้งเครื่องเป็นคนทำ clean start ตาม README
+SA ใช้ `/cds-modernization` ไม่เกิน 15 นาที ปรับ [แผนระบบเดิมไปใหม่](legacy-modernization.md) ให้ตรงของที่ทำ. จากนั้นใช้ `/cds-rehearse`; ให้ FE เป็นคนคลิกเดโม, BE อธิบายเงิน/transaction และการป้องกัน OWASP ที่ทดสอบจริง, SA เปิดเรื่องและตอบ architecture/AI evidence. ซ้อมคำถามใน [security defense](security-defense.md). ให้คนที่ไม่ได้ตั้งเครื่องเป็นคนทำ clean start ตาม README
 
 **ลำดับเดโม:** login/branch → ขอเบิก → history → receipt จาก eligible fixture → กดยืนยันซ้ำ/ข้ามสาขาแล้วถูกปฏิเสธ → audit/test/JMeter → อะไรยังไม่ได้ทำ. ใช้ [แผนเก็บคะแนน](judging-playbook.md) ตรวจว่ามีหลักฐานครบ
 

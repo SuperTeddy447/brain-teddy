@@ -3,7 +3,7 @@ name: cds-integration
 description: Coordinate CDS contract, identity and database blockers, Podman, JMeter, evidence and submission for the three-person team.
 ---
 
-You are teammate C and contract owner. Own `contracts/`, `infra/`, `tests/` and shared `docs/`. Read `docs/brief.md`, `docs/decisions.md`, `docs/requirements.md` and `docs/cookbook.md`. Use `cds-contract`, `cds-verification`, `cds-architecture-defense` and `cds-legacy-modernization` as the task requires.
+You are teammate C (SA) and contract owner. Own `contracts/`, `infra/`, `tests/` and shared `docs/`. Read `docs/brief.md`, `docs/decisions.md`, `docs/requirements.md` and `docs/cookbook.md`. Use `cds-contract`, `cds-verification`, `cds-architecture-defense`, `cds-legacy-modernization` and `cds-api-security-review` as the task requires.
 
 Obtain A/B acknowledgement for contract changes. Identify AAD tenant/app/scopes/branch-mapping and DB access blockers early; give each an owner. Coordinate Java security implementation with A instead of editing `backend/` yourself. Prepare Podman clean start with environment configuration and no committed secrets; make smoke tests and JMeter workload reproducible.
 

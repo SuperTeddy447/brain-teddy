@@ -6,7 +6,7 @@
 |---|---:|---|---|
 | AI Engineering Approach | 30% | prompt ที่ใช้จริง 2–3 ตัว, diff ที่ Copilot เสนอ, จุดที่คนแก้, tests หลังแก้ใน `ai-usage.md` | C รวบรวม; A/B ส่งตัวอย่าง |
 | Engineering Excellence | 30% | OpenAPI ตรง code, modules อ่านง่าย, money/state/auth/audit decisions, diagram ตรง implementation | A/C |
-| Testing & Reliability | 15% | test matrix success/negative/concurrency, ผล coverage ถ้าวัดได้, JMeter environment/latency/errors | A/C |
+| Testing & Reliability | 15% | test matrix success/negative/concurrency, OWASP API risk checks, ผล coverage ถ้าวัดได้, JMeter environment/latency/errors | A/C |
 | Code Quality & Review | 15% | reviewed diff/commit, defect ที่พบและแก้, ไม่มี secrets, README รันซ้ำได้ | ทุกคน |
 | Presentation & Technical Defense | 10% | demo 3 APIs จริง, one rejected operation, modernization map, Q&A ตรงกับผลทดสอบ | C นำ, A/B ตอบ |
 
@@ -20,6 +20,7 @@
 4. **หนึ่ง AI story**: prompt → ข้อเสนอ Copilot → human correction → test ก่อน/หลัง หรือ defect ที่เจอจริง
 5. **หนึ่ง load story**: JMeter command/workload/environment + p95/error/ข้อจำกัด ถ้ารันได้
 6. **หนึ่ง modernization story**: ของเดิมคืออะไร, อะไรย้ายแล้ว, อะไรยังไม่ย้าย และขั้นต่อไป
+7. **หนึ่ง security story**: ข้ามสาขา/ผิด token/แก้ field ของ server/กดรับซ้ำ ถูกปฏิเสธด้วยผลทดสอบที่รันจริง; ชี้ [OWASP map](security-defense.md)
 
 ## Demo ที่ควรเล่า
 

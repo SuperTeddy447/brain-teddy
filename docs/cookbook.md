@@ -10,6 +10,24 @@
 
 หลักฐานที่ใช้ตอบเกณฑ์คะแนนอยู่ใน [judging playbook](judging-playbook.md). ไม่มีแผนใดรับประกันชนะ; หากผู้จัดเปลี่ยนโจทย์ ให้ C ปรับ P0 ก่อนแจกงาน
 
+## เปิดเอกสารไหนในช่วงใด
+
+ใช้ [README](../README.md) เป็นปุ่มเริ่ม, [ฉากซ้อม](rehearsal-scenes.md) เมื่ออยากเห็นตัวอย่าง, และ [คู่มือ Copilot](copilot-setup.md) สำหรับเลือก agent/skill/prompt. ตารางนี้บอกว่าเอกสารอื่นมีหน้าที่อะไร; ไม่ต้องอ่านทุกไฟล์ตั้งแต่ต้นจนจบก่อนลงมือ
+
+| ช่วง | เปิด/อัปเดตเอกสาร | เจ้าของ | เอาไปใช้ทำอะไร |
+|---|---|---|---|
+| ก่อนแข่ง | `README.md`, `copilot-setup.md`, `rehearsal-scenes.md` | ทุกคน | เลือก BE/FE/SA, เช็กเครื่องและ Agent mode |
+| Briefing/Q&A | `brief.md`, `requirements.md`, `decisions.md` | SA; BE/FE ส่งคำถาม | แยกกฎจริง/unknown/ขอบเขต P0 |
+| Contract gate | `contracts/` OpenAPI ที่สร้างใหม่, `decisions.md`, `legacy-modernization.md` | SA; BE/FE review | ทำ request/response/error และขอบเขตระบบเดิมให้ตรงกัน |
+| สร้าง UI/API | OpenAPI ล่าสุด, `field-guide.md`; prompt ใน `.github/prompts/` | BE/FE | ทำ withdrawal/history/receipt ตาม contract เดียวกัน |
+| ทุก checkpoint | `test-matrix.md`, `ai-usage.md` | SA เก็บ; BE/FE ส่งผล | จดสิ่งที่รันจริง, งาน AI และ human correction |
+| 14:30–15:00 security | `security-defense.md`, `test-matrix.md` | SA+BE; FE ดู UI | ตรวจ OWASP API Top 10 กับ API ที่รันจริง |
+| 15:00–16:00 load/reliability | `performance.md`, `test-matrix.md` | SA+BE | JMeter, concurrency, rollback, restart |
+| 16:00–17:00 | `legacy-modernization.md`, `judging-playbook.md`, `field-guide.md` | SA นำ; BE/FE ตรวจคำกล่าว | ซ้อมเดโมและ Q&A ตรง implementation |
+| 17:00–17:50 | `submission-checklist.md`, README วิธีรันจริง | SA; BE/FE ช่วยตรวจ | freeze, เปิดไฟล์ที่ส่งแล้วตรวจ |
+
+`docs/prompts/00–03` เป็น prompt ข้อความรุ่นแรกสำหรับอ่านหรือคัดลอกเอง. งานใน VS Code ให้เลือก `.github/prompts/*.prompt.md` ตาม [ตาราง prompt ปัจจุบัน](copilot-setup.md). อย่าส่ง prompt เก่าและใหม่ซ้ำให้ agent ใน task เดียว
+
 ## ก่อนเริ่ม: แจกสิทธิ์แก้ไฟล์
 
 | คน | Owns | ขอ review จาก | ห้ามแก้ร่วมโดยไม่ตกลง |
@@ -46,7 +64,7 @@
 | 11:30–12:00 | แก้ mismatch กับ contract | ต่อ UI กับ API จริง | รัน smoke, เปิด bug list | `/cds-verify`; `cds-verification` | withdrawal + history ผ่าน หรือระบุ blocker ชัด |
 | 12:00–13:00 | พัก; ส่งสถานะให้ C ก่อนพัก | พัก | อัปเดต backlog/usage ตามจริง | ไม่ต้องเรียก prompt | รู้สิ่งที่เริ่มหลังพัก |
 | 13:00–14:30 | receipt transaction, idempotency, audit, scope | receipt detail/review/confirm/error | ตรวจ AAD API authorization และ state fixtures; อนุมัติ P1 สูงสุด 1–2 เรื่องถ้า P0 ผ่าน | `/cds-receipt-hardening`, `/cds-frontend-slice`, `/cds-integration`; `cds-contract`, `cds-ui-review` | success และ duplicate/cross-branch rejection แสดงได้ |
-| 14:30–16:00 | ทดสอบ money, rollback, concurrency | ทดสอบ UI states/keyboard | smoke 3 API, JMeter รอบเล็ก, metrics | `/cds-verify`; `cds-verification` | `test-matrix.md` และ `performance.md` มีผลจริง |
+| 14:30–16:00 | 14:30–15:00 ช่วย SA ตรวจ token/branch/mass assignment/retry; ต่อด้วย money, rollback, concurrency | ตรวจ UI states/keyboard และไม่ค้างข้อมูลข้ามผู้ใช้ | 14:30–15:00 OWASP review; จากนั้น smoke 3 API, JMeter รอบเล็ก, metrics | `cds-security-review`, `cds-verify`; `cds-api-security-review`, `cds-verification` | `security-defense.md`, `test-matrix.md`, `performance.md` มีสถานะ/ผลจริง |
 | 16:00–17:00 | แก้ defect ที่ขวางเดโม; ตรวจ data claim | browser rehearsal, narrow layout; ตรวจ UI claim | 16:00–16:15 migration map; ต่อด้วย clean start, diagram/ADR, demo script | `/cds-modernization`, `/cds-rehearse`; `cds-legacy-modernization`, `cds-verification`, `cds-architecture-defense`, `cds-ui-review` | เพื่อนร่วมทีมรันตาม README ได้; demo สำเร็จ 1 รอบ; map ตรงระบบ |
 | 17:00–17:30 | Feature freeze; แก้ blocker เท่านั้น | ตรวจ label/error/links | review source revision และเอกสารส่ง | `/cds-submit`; `cds-verification` | checklist เกือบครบ; ไม่มี claim เกินสิ่งที่ทดสอบ |
 | 17:30–17:50 | ช่วยตรวจไฟล์สุดท้าย | ช่วยตรวจ UI/เดโม | ส่ง SharePoint และเปิดไฟล์ที่ส่งตรวจ | `/cds-submit` | อัปโหลดสำเร็จ; เก็บหลักฐานเวลา/ไฟล์ |
@@ -64,6 +82,7 @@ Prompt files อยู่ใน `.github/prompts/`. ใน VS Code Copilot Chat 
 | Slice 1 | `/cds-integration` | `/cds-backend-slice` | `/cds-frontend-slice` |
 | Slice 2 | `/cds-integration` | `/cds-receipt-hardening` | `/cds-frontend-slice` พร้อมขอบเขต receipt |
 | Verification | `/cds-verify` | แก้ defect ที่ C แจ้ง | แก้ defect ที่ C แจ้ง |
+| OWASP review | `/cds-security-review` | ร่วมตรวจ/fix authorization และ business flow | ตรวจ UI/session/error ที่เกี่ยวข้อง |
 | Modernization/defense | `/cds-modernization` | ตรวจ data/transaction claim | ตรวจ UI claim |
 | Rehearsal | `/cds-rehearse` | ร่วมซ้อม | ร่วมซ้อม |
 | Submit | `/cds-submit` | ตรวจ revision | ตรวจ UI |

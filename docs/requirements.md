@@ -13,7 +13,7 @@
 | R05 | Identity and authorization | ถ้ามี AAD จริง: SPA login ตาม config จริง, API ตรวจ token และ scope; ไม่มีสิทธิ์ต้องถูกปฏิเสธ. ถ้าขาดสิทธิ์: blocker พร้อม owner และ fallback ที่ผู้จัดอนุญาต | C/A | 14:30 |
 | R06 | Persistence and audit | ใช้ DB ที่อนุมัติ; mutation กับ audit สอดคล้องใน transaction; restart แล้วข้อมูลยังอยู่. ถ้า DB2 เข้าไม่ได้ ระบุ fallback ชัด | A/C | 14:30 |
 | R07 | React task flow | สาขาทำ create/history/receipt ได้; ยอด สาขา เลขอ้างอิง และผลลัพธ์อ่านชัด; error/unknown outcome ไม่ชวนกดซ้ำมั่ว | B | 14:30 |
-| R08 | Reliability evidence | Smoke 3 APIs; T01–T11 ที่ทำได้มีผลจริง; ทดสอบ rollback/concurrency ตามเวลาและ access | C/A | 16:00 |
+| R08 | Reliability/security evidence | Smoke 3 APIs; T01–T11 และ T20–T21 ที่ทำได้มีผลจริง; ทดสอบ rollback/concurrency และ OWASP review ตามเวลา/access | C/A | 16:00 |
 | R09 | Run and load evidence | เพื่อนร่วมทีม clean start ได้; JMeter อย่างน้อยหนึ่งรอบ correctness และรอบเล็กหาก environment พร้อม; ระบุ p95/error/ข้อจำกัดตามจริง | C | 17:00 |
 | R10 | Submission and AI evidence | README วิธีรัน, diagram ตรงระบบ, Copilot prompt → output → human correction → test, checklist และไฟล์ที่ส่งเปิดได้ | C | 17:50 |
 

@@ -13,12 +13,12 @@
 | 10:00–10:30 | SA ใช้ `/cds-kickoff` ทำ contract; BE/FE ตรวจตัวอย่าง request/response และรับงาน | BE/FE ตกลง contract รุ่นเดียวกัน; blocker สำคัญมี owner |
 | 10:30–12:00 | BE ใช้ `/cds-backend-slice`, FE ใช้ `/cds-frontend-slice`, SA ใช้ `/cds-integration` | withdrawal + history ต่อ UI → API → ข้อมูลที่เก็บไว้ได้ หรือชี้ blocker ได้ |
 | 13:00–14:30 | BE ใช้ `/cds-receipt-hardening`, FE ทำ receipt UI, SA ตรวจสิทธิ์/fixture | receipt สำเร็จหนึ่งครั้ง และกดซ้ำหรือข้ามสาขาถูกปฏิเสธ |
-| 14:30–16:00 | SA ใช้ `/cds-verify`; BE/FE แก้ defect; บันทึก [test matrix](docs/test-matrix.md) และ [ผล JMeter](docs/performance.md) | 3 API smoke ผ่าน; ผลทดสอบเป็นของที่รันจริง |
+| 14:30–16:00 | SA+BE ใช้ `cds-security-review` ตรวจ [OWASP ของ CDS](docs/security-defense.md) ก่อน แล้ว SA ใช้ `cds-verify` เก็บ [test matrix](docs/test-matrix.md) และ [ผล JMeter](docs/performance.md) | 3 API smoke และกรณีเสี่ยงสูงมีผลจริง; สิ่งที่ยังไม่รันมีสถานะชัด |
 | 16:00–17:00 | SA ใช้ `/cds-modernization` แล้ว `/cds-rehearse`; BE/FE ช่วย clean start และซ้อม | คนอื่นเปิดระบบตามวิธีรันได้; เดโม 5–7 นาทีตรงกับระบบจริง |
 | 17:00–17:50 | หยุดเพิ่ม feature; SA ใช้ `/cds-submit` และ [submission checklist](docs/submission-checklist.md) | ส่ง SharePoint แล้วเปิดไฟล์ที่ส่งตรวจสำเร็จ |
 | หลัง 18:00 | ใช้ script ที่ซ้อมและ [คู่มือตอบกรรมการ](docs/field-guide.md) | อธิบายได้ว่าอะไรทำจริง อะไรเป็น fixture และอะไรเป็นแผนต่อยอด |
 
-**ถ้าแถวใดยังไม่ผ่าน:** SA ระบุ blocker/owner ใน [decisions](docs/decisions.md), เลื่อนงานเสริม P1 ออก แล้วให้ทีมทำ P0 ที่ยังขาดก่อน. เกณฑ์ P0/P1/P2 อยู่ใน [requirements](docs/requirements.md). ถ้าพิมพ์ `/prompt` แล้วไม่ขึ้น ให้เปิดไฟล์ prompt ตามชื่อใน `.github/prompts/` และวางข้อความใน Copilot Agent mode ตาม [วิธีใช้ Copilot](docs/copilot-setup.md)
+**ถ้าแถวใดยังไม่ผ่าน:** SA ระบุ blocker/owner ใน [decisions](docs/decisions.md), เลื่อนงานเสริม P1 ออก แล้วให้ทีมทำ P0 ที่ยังขาดก่อน. เกณฑ์ P0/P1/P2 อยู่ใน [requirements](docs/requirements.md). ขั้นตอนเลือก agent, prompt และ skill รวมทั้งความต่างของ `docs/prompts/` กับ `.github/prompts/` อยู่ใน [วิธีใช้ Copilot แบบจับมือทำ](docs/copilot-setup.md)
 
 ระหว่างทำงาน ให้คนที่ทำงานบันทึก prompt, สิ่งที่คนแก้ และผลจริงใน [AI usage](docs/ai-usage.md). SA รวบรวมหลักฐานตาม [แผนเก็บคะแนน](docs/judging-playbook.md) ก่อนซ้อมเดโม
 
@@ -34,9 +34,9 @@
 
 | คน | เจ้าของไฟล์ | Agent ที่เลือกใน Copilot | Skill ที่สั่งใช้เมื่อจำเป็น | Prompt เริ่มต้น |
 |---|---|---|---|---|
-| BE (A) | `backend/` | `cds-backend` | `cds-contract`, `cds-verification` | `/cds-backend-slice` |
+| BE (A) | `backend/` | `cds-backend` | `cds-contract`, `cds-verification`, `cds-api-security-review` | `/cds-backend-slice` |
 | FE (B) | `frontend/` | `cds-frontend` | `cds-ui-review` | `/cds-frontend-slice` |
-| SA (C) | `contracts/`, `infra/`, `tests/`, shared `docs/` | `cds-integration` | `cds-contract`, `cds-verification`, `cds-architecture-defense`, `cds-legacy-modernization` | `/cds-kickoff` |
+| SA (C) | `contracts/`, `infra/`, `tests/`, shared `docs/` | `cds-integration` | `cds-contract`, `cds-verification`, `cds-architecture-defense`, `cds-legacy-modernization`, `cds-api-security-review` | `/cds-kickoff` |
 
 Agent = บทบาทและขอบเขตงาน; skill = วิธีทำงานเฉพาะเรื่อง; prompt = งานหนึ่งช่วงเวลา. ตารางเรียกใช้เต็มวันและเกณฑ์ผ่านอยู่ใน [cookbook](docs/cookbook.md). รายละเอียดเปิดใช้และทดสอบ Copilot อยู่ใน [copilot-setup](docs/copilot-setup.md). ถ้า IDE ไม่แสดง custom agent หรือ slash prompt ให้เปิดไฟล์ prompt ตามลิงก์แล้ววางข้อความใน Copilot Agent mode พร้อมระบุ skill ที่ต้องการ
 
@@ -55,9 +55,10 @@ Agent = บทบาทและขอบเขตงาน; skill = วิธ�
 
 - [Cookbook รายเวลาและ prompt mapping](docs/cookbook.md)
 - [ฉากซ้อมวันแข่ง: BE/FE/SA ทำอะไรและส่งต่ออย่างไร](docs/rehearsal-scenes.md)
+- [วิธีใช้ Agent, Skill, Prompt และตารางเลือก prompt ตามเวลา](docs/copilot-setup.md)
+- [OWASP API Top 10 สำหรับ CDS และคำตอบกรรมการ](docs/security-defense.md)
 - [ข้อกำหนด P0/P1/P2 และเกณฑ์ผ่าน](docs/requirements.md)
 - [คู่มือเข้าใจ flow](docs/field-guide.md), [แผนยกระดับระบบเดิม](docs/legacy-modernization.md), [แผนเก็บคะแนนด้วยหลักฐาน](docs/judging-playbook.md)
-- [วิธีใช้ GitHub Copilot agents, skills, prompts และ UI UX Pro Max](docs/copilot-setup.md)
 - [Brief](docs/brief.md), [Decisions](docs/decisions.md), [Runbook เดิม](docs/runbook.md)
 - [Test matrix](docs/test-matrix.md), [Performance](docs/performance.md), [AI usage](docs/ai-usage.md), [Submission checklist](docs/submission-checklist.md)
 

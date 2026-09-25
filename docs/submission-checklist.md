@@ -11,6 +11,7 @@
 - [ ] P0 requirements in `docs/requirements.md` have evidence or explicit Blocked/Not run status; P1 claims only what ran.
 - [ ] Legacy-to-new map labels each integration implemented, fixture/fallback, blocked or future; data ownership is explained.
 - [ ] Test matrix, measured coverage when required, load results and limitations attached.
+- [ ] OWASP API Top 10 review in `docs/security-defense.md` cites tested evidence; unrun/blocked categories are not marked passed.
 - [ ] AI usage summary includes prompts, human corrections and real evidence.
 - [ ] Preparation and third-party licenses/sources are attributed as required.
 - [ ] A teammate has run the documented clean-start path.

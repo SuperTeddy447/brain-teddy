@@ -23,3 +23,9 @@ All rows start Not run. Fill actual revision, command and evidence after executi
 | T17 | Container clean start | Documented setup works on declared environment | Not run |
 | T18 | Load test | Measured latency/errors/throughput with workload/environment | Not run |
 | T19 | Identity/scope change | No cached data from previous user/scope displayed | Not run |
+| T20 | Mass assignment / property scope | Client-supplied branch/status/approved amount/audit actor cannot change server-owned fields or leak hidden fields | Not run |
+| T21 | Function-level authorization | Branch role cannot call Center-only operation; wrong role cannot confirm receipt | Not run |
+| T22 | Resource bounds | History page/payload limits and abnormal request rate fail safely without unbounded work | Not run |
+| T23 | Security configuration | No committed secrets, debug/admin exposure or overly broad CORS in deployed profile; safe error detail | Not run |
+| T24 | Injection boundary | SQL inputs are parameterized; hostile filter/ID text does not alter query or expose data | Not run |
+| T25 | API inventory and external trust | Open routes match OpenAPI/owner; any live external response is validated, otherwise integration marked Not run | Not run |
