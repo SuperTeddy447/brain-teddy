@@ -11,7 +11,7 @@
 | Agent | `.github/agents/*.agent.md` | บทบาท A/B/C | เลือกชื่อ agent จากตัวเลือกของ Copilot Chat |
 | Prompt file | `.github/prompts/*.prompt.md` | งานหนึ่ง milestone | ใน Chat พิมพ์ `/ชื่อไฟล์` เช่น `/cds-kickoff` |
 
-ชื่อ agent กับ skill ต่างกัน: ให้คน A/B/C **เลือก agent ของตัวเอง** แล้วใช้ prompt ตามเวลา. Skill ถูกเลือกจากงานที่ทำหรือระบุชื่อใน prompt. ไม่ควรเริ่มสาม agent ให้แก้ไฟล์เดียวกันพร้อมกัน
+ชื่อ agent กับ skill ต่างกัน: **BE = A, FE = B, SA = C** ใน cookbook. ให้แต่ละคนเลือก agent ของตัวเองแล้วใช้ prompt ตามเวลา. Skill ถูกเลือกจากงานที่ทำหรือระบุชื่อใน prompt. ไม่ควรเริ่มสาม agent ให้แก้ไฟล์เดียวกันพร้อมกัน
 
 ## เช็กให้ใช้งานได้ใน 5 นาที
 
