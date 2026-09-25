@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Editor & IDE configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Obsidian workspace cache (optional, comment out if you want to sync workspace)
+.obsidian/workspace.json
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
